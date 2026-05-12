@@ -9,10 +9,10 @@
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com</groupId>
-	<artifactId>unknownharddrivesystem</artifactId>
+	<artifactId>unknown_hard_drive_back</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>unknownharddrivesystem</name>
-	<description>unknownharddrivesystem</description>
+	<name>unknown_hard_drive_back</name>
+	<description>unknown_hard_drive_back</description>
 	<url/>
 	<licenses>
 		<license/>
