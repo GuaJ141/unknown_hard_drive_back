@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.unknownharddrivesystem.mapper.FriendMapper">
+    <select id="listFriends">
+        SELECT friend_id FROM `hd_friend_list` where `master_id` = #{id}
+    </select>
+    <!--   5-4晚，不能查自己，不能查添加了的好友 -->
+    <select id="searchUser" resultType="HdUser">
+        SELECT * from hd_user WHERE (id != #{id}) and (username like concat( #{input}, '%') or unique_id like #{input})
+    </select>
+    <insert id="sendMessage" parameterType="FriendAddMessage">
+        INSERT INTO hd_friend_add_message (message, source_userId, to_userId, request_time)
+            VALUES(#{message}, #{sourceUserId}, #{toUserId}, #{requestTime})
+
+    </insert>
+    <select id="isMyFriend" resultType="FriendList">
+        SELECT * FROM hd_friend_list where master_id = #{masterId} and friend_id = #{friendId}
+    </select>
+
+    <select id="isSentAlready" resultType="FriendAddMessage">
+        SELECT * FROM hd_friend_add_message where source_userId = #{sourceUserId} and to_userId = #{toUserId}
+    </select>
+
+    <select id="listMessageById" resultType="FriendAddMessage">
+        SELECT * FROM hd_friend_add_message where to_userId = #{id}
+    </select>
+
+    <delete id="deleMessageById" >
+        DELETE FROM hd_friend_add_message where id = #{id}
+    </delete>
+
+    <insert id="friendAddToList">
+        INSERT INTO hd_friend_list (friend_id, master_id)
+        VALUES
+            (#{friendId},#{masterId});
+    </insert>
+
+    <delete id="deleFriendById">
+        DELETE FROM hd_friend_list where friend_id = #{friendId} and master_id = #{masterId};
+    </delete>
+
+    <select id="selectFriend" parameterType="FriendList">
+        SELECT * FROM hd_friend_list WHERE master_id = #{msterId};
+    </select>
+</mapper>

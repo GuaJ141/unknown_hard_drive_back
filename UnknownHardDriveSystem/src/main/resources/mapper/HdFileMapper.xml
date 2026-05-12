@@ -1,0 +1,132 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.unknownharddrivesystem.mapper.HdFileMapper">
+    <insert id="fileUpload" parameterType="hdFile" >
+        INSERT INTO hd_file
+            (`filename`, `fileformat`, `path`, `username`, `type`, `upload_time`, `size`)
+        VALUES
+            (#{filename}, #{fileformat}, #{path}, #{username}, #{type}, #{uploadTime}, #{size})
+    </insert>
+    <select id="selectAllFile" resultType="hdFile" parameterType="String">
+        select *
+        from hd_file
+        where
+            path = #{path}
+          and
+            username = #{username}
+          and
+            status = '1'
+        order by type desc
+    </select>
+    <update id="fileRename">
+        UPDATE hd_file SET
+             `filename` = #{filename} WHERE `id` = #{id}
+    </update>
+    <update id="folderPathUpdate">
+        UPDATE hd_file SET
+            path = #{path} WHERE `id` = #{id}
+    </update>
+    <select id="selectFileByID" resultType="hdFile" >
+        select * from hd_file where id = #{id} and type = 'File'
+    </select>
+    <select id="selectFolderByID" resultType="hdFile" >
+        select * from hd_file where id = #{id} and type = 'Folder'
+    </select>
+    <select id="selectFolderByName" resultType="hdFile" >
+        select * from hd_file where filename = #{foldername} and type = 'Folder'
+    </select>
+    <select id="samePathSameFile" resultType="hdFile" >
+        select * from hd_file
+             where username = #{username} and path = #{path} and filename = #{filename} and fileformat = #{fileformat} and status = '1' and type = 'File'
+    </select>
+    <select id="samePathSameFolder" resultType="hdFile" >
+        select * from hd_file
+        where username = #{username} and path = #{path} and filename = #{filename}  and status = '1' and type = 'Folder'
+    </select>
+    <update id="moveToTrashZone">
+        UPDATE hd_file SET
+            status = '0' WHERE `id` = #{id}
+    </update>
+    <update id="fileRestore">
+        UPDATE hd_file SET
+            status = '1' WHERE `id` = #{id}
+    </update>
+    <update id="moveToFavor">
+        UPDATE hd_file SET
+            favor = '1' WHERE `id` = #{id}
+    </update>
+    <update id="favorRestore">
+        UPDATE hd_file SET
+            favor = '0' WHERE `id` = #{id}
+    </update>
+    <delete id="realDelete">
+        DELETE FROM hd_file WHERE `id` = #{id}
+    </delete>
+    <delete id="deleteFolderByPath">
+        DELETE FROM hd_file WHERE `username` = #{username} and `path` = #{path}
+    </delete>
+    <select id="selectFavor" resultType="hdFile" parameterType="String">
+        select *
+        from hd_file
+        where
+            username = #{username}
+          and
+            status = '1'
+          and
+            favor = '1'
+        order by type desc
+    </select>
+
+    <select id="selectTrash" resultType="hdFile" parameterType="String">
+        select *
+        from hd_file
+        where
+            username = #{username}
+          and
+            status = '0'
+        order by type desc
+    </select>
+    <delete id="deleteFileByUsername" parameterType="String">
+        DELETE FROM hd_file
+        where username = #{username}
+    </delete>
+    <select id="selectFileByPathLike" resultType="hdFile" >
+        select * from hd_file
+        where path like concat(#{path},'%') and username = #{username} and status = '1'
+    </select>
+
+    <select id="selectFileByFilename" resultType="hdFile" parameterType="String">
+        select * from hd_file
+        where
+            filename like concat('%',#{filename},'%') and username = #{username} and type = 'File' and status = '1'
+                or
+            fileformat like concat('%',#{filename},'%') and username = #{username} and type = 'File' and status = '1'
+    </select>
+    <select id="selectFavorFileByFilename" resultType="hdFile" parameterType="String">
+        select * from hd_file
+        where
+            filename like concat('%',#{filename},'%') and type = 'File' and status = '1' and favor = '1' and username = #{username}
+                or
+            fileformat like concat('%',#{filename},'%') and type = 'File' and status = '1' and favor = '1' and username = #{username}
+
+    </select>
+    <select id="selectTrashFileByFilename" resultType="hdFile" parameterType="String">
+        select * from hd_file
+        where
+            filename like concat('%',#{filename},'%') and username = #{username} and status = '0'
+                or
+            fileformat like concat('%',#{filename},'%') and username = #{username} and status = '0'
+    </select>
+<!--    <select id="countFile" resultType="int" parameterType="String">-->
+<!--        select count(*)-->
+<!--        from hd_file-->
+<!--        where-->
+<!--            path = #{folderpath}-->
+<!--          and-->
+<!--            username = #{username}-->
+<!--          and-->
+<!--            status = 1-->
+<!--    </select>-->
+</mapper>

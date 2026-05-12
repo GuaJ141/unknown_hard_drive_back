@@ -1,0 +1,83 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.unknownharddrivesystem.mapper.HdPostMapper">
+    <select id="selectAll" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            status = '1'
+        order by upload_time desc
+    </select>
+
+    <select id="selectMy" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            status = '1'
+        and username = #{username}
+        order by upload_time desc
+    </select>
+
+    <select id="selectById" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            id = #{id}
+    </select>
+
+
+
+    <select id="searchPost" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            title like concat('%',#{search},'%') and status = '1'
+                or
+            `describe` like concat('%',#{search},'%') and status = '1'
+                or
+            username like concat('%',#{search},'%') and status = '1'
+    </select>
+
+    <select id="searchMy" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            title like concat('%',#{search},'%') and status = '1' and username = #{username}
+           or
+            `describe` like concat('%',#{search},'%') and status = '1' and username = #{username}
+           or
+            username like concat('%',#{search},'%') and status = '1' and username = #{username}
+    </select>
+
+    <insert id="insertPost" parameterType="hdPost">
+        INSERT INTO hd_post
+            (`title`, `describe`, `username`, `upload_time`, `file_id`)
+        VALUES
+            (#{title}, #{describe}, #{username}, #{uploadTime}, #{fileId})
+    </insert>
+
+    <select id="isTheFilePosted" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            file_id = #{fileId} and status = '1'
+
+    </select>
+    <update id="delPost" >
+        UPDATE hd_post SET `status` = '0' WHERE `id` = #{id}
+    </update>
+
+    <update id="delPostByUsername" >
+        UPDATE hd_post SET `status` = '0' WHERE `username` = #{username}
+    </update>
+
+    <select id="isExist" resultType="hdPost">
+        select *
+        from hd_post
+        where
+            id = #{id} and status = '1'
+
+    </select>
+</mapper>

@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper
+        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.unknownharddrivesystem.mapper.HdUserMapper">
+    <select id="selectLatestUId"  resultType="java.lang.Integer" >
+        SELECT MAX(unique_id) FROM `hd_user`;
+    </select>
+    <select id="verify" resultType="hdUser" parameterType="hdUser">
+        select *
+        from hd_user
+        where BINARY
+              username = #{username}
+          and password = #{password}
+    </select>
+    <select id="selectUserById" resultType="hdUser" parameterType="hdUser">
+        select *
+        from hd_user
+        where id = #{id}
+    </select>
+    <select id="selectUserByUsername" resultType="hdUser" parameterType="hdUser">
+        select *
+        from hd_user
+        where `username` = #{username}
+    </select>
+    <insert id="register" parameterType="hdUser" >
+        INSERT INTO hd_user
+            (`username`, `password`, `create_time`, `space`, `unique_id`)
+        VALUES
+            (#{username}, #{password}, #{createTime}, #{space}, #{uniqueId});
+    </insert>
+    <update id="userUsedUpdate">
+        UPDATE hd_user SET
+            used = #{used} WHERE `id` = #{id}
+    </update>
+    <update id="userPswUpdate">
+        UPDATE hd_user SET
+            password = #{password} WHERE `id` = #{id}
+    </update>
+    <delete id="userdelete">
+        DELETE FROM hd_user
+        where id = #{id}
+    </delete>
+</mapper>
