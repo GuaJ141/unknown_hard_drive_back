@@ -31,3 +31,40 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Build outputs
+target/
+build/
+out/
+
+# Maven wrapper
+.mvn/wrapper/maven-wrapper.jar
+
+# User-uploaded or large resource files
+UserFiles/
+UserFiles/**
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+*.log.*
+
+# Java
+*.class
+*.jar
+*.war
+*.ear
+
+# Temporary files
+*.tmp
+*.swp
+*.swo
+
+# Environment / secrets
+.env
+*.env
+
