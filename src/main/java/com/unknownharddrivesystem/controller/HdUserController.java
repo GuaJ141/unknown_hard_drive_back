@@ -14,6 +14,7 @@ import jakarta.websocket.Session;
 import org.apache.catalina.session.StandardSession;
 import org.apache.tomcat.websocket.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
 import java.io.File;
@@ -90,6 +91,7 @@ public class HdUserController {
         session.invalidate();
     }
 
+    @Transactional
     @PostMapping("/register")
     public int register(@RequestParam Map params){
         String username = params.get("username").toString();
@@ -120,11 +122,11 @@ public class HdUserController {
         boolean create = folder.mkdir();
         int res = hdUserMapper.register(user);
 
+        if (!create)throw new RuntimeException("已有存在相同用户名文件夹，数据库数据回滚");
+
         if (create && res == 1){
             return res;
         }
-
-
         return 0;
     }
 

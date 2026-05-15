@@ -124,6 +124,7 @@ public class HdFriendController {
         HttpSession session = request.getSession(false);
         int masterId = (int) session.getAttribute("id");
 
+        //判断是否已经为好友
         friendList = friendMapper.isMyFriend(masterId, friendId);
         if (friendList != null){
             return 2;
@@ -137,8 +138,10 @@ public class HdFriendController {
         res += friendMapper.friendAddToList(masterId, friendId);
         if(res != 3){
             throw new RuntimeException("添加好友失败，数据回滚");
+        }else{
+            return 1;
         }
-        return res;
+
     }
 
     @PostMapping("/selectFriend")
@@ -172,8 +175,10 @@ public class HdFriendController {
         res += friendMapper.deleFriendById(masterId, friendId);
         if(res != 2){
             throw new RuntimeException("删除好友失败，数据回滚");
+        }else{
+            return 1;
         }
-        return res;
+
     }
 
 }
