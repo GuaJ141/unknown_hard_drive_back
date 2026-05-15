@@ -1,5 +1,6 @@
 package com.unknownharddrivesystem.controller;
 
+import com.sun.tools.javac.Main;
 import com.unknownharddrivesystem.entity.HdComment;
 import com.unknownharddrivesystem.entity.HdFile;
 import com.unknownharddrivesystem.entity.HdPost;
@@ -109,17 +110,21 @@ public class HdUserController {
         user.setSpace(1073741824);
         user.setUniqueId(uId);
 
-        File folder = new File(MainPath + "\\" + username);
-        if (!folder.exists()){
-
-            int res = hdUserMapper.register(user);
-            //System.out.println("res:" + res);
-            boolean create = folder.mkdir();
-            //System.out.println("create:" + create);
-            if (create && res == 1){
-                return res;
-            }
+        //判断UserFile文件是否存在
+        File userFiles = new File(MainPath);
+        if(!userFiles.exists()){
+            userFiles.mkdir();
         }
+
+        File folder = new File(MainPath + "\\" + username);
+        boolean create = folder.mkdir();
+        int res = hdUserMapper.register(user);
+
+        if (create && res == 1){
+            return res;
+        }
+
+
         return 0;
     }
 
