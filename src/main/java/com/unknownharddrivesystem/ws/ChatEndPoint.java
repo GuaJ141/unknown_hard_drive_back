@@ -107,7 +107,7 @@ public class ChatEndPoint {
     //接收到用户发送的数据时调用
     @OnMessage
     public void onMessage(String message, Session session){
-
+        
     }
 
     //连接关闭时调用
