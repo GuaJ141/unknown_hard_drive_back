@@ -154,9 +154,11 @@ public class HdFriendController {
         List<HdUser> resLists = new ArrayList<>();
         for(FriendList i : friendIdLists){
             HdUser friendInfo = userMapper.selectUserById(i.getFriendId());
+
             HdUser friendInfoAfterSelect = new HdUser();
             friendInfoAfterSelect.setUsername(friendInfo.getUsername());
             friendInfoAfterSelect.setUniqueId(friendInfo.getUniqueId());
+            friendInfoAfterSelect.setId(friendInfo.getId());
             resLists.add(friendInfoAfterSelect);
         }
         return resLists;
