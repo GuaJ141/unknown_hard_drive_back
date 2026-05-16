@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.ObjectMapper;
 import tools.jackson.databind.util.JSONPObject;
 
+import java.io.IOException;
 import java.net.http.WebSocket;
 import java.util.ArrayList;
 import java.util.List;
@@ -53,26 +54,22 @@ public class ChatEndPoint {
         this.httpSession = httpSession;
 
         //获取session里的数据
-        int userUid = (int) httpSession.getAttribute("uId");
-        int userId = (int) httpSession.getAttribute("id");
-        //System.out.println(((HdUser)httpSession.getAttribute("user")).getUsername());
+        int myUId = (int) httpSession.getAttribute("uId");
+        int myId = (int) httpSession.getAttribute("id");
 
         //查用户好友
-        selectFriend(userId);
-        System.out.println(userId);
+        selectFriend(myId);
 
         //将当前对象存储到容器中
-        onlineUser.put(userUid, this);
+        onlineUser.put(myUId, this);
 
         //创建Json字符串
         MessageJSON messageJSON = new MessageJSON(true, "user now live", getUId());
         ObjectMapper objectMapper = new ObjectMapper();
-        String message = objectMapper.writeValueAsString(messageJSON);
+        String onlineMessage = objectMapper.writeValueAsString(messageJSON);
 
         //将当前在线用户推送给自己的好友所有客户端
-        broadCastAllUsers(message);
-
-
+        broadCastAllUsers(onlineMessage, myUId);
     }
 
     private void selectFriend(int userId){
@@ -84,15 +81,15 @@ public class ChatEndPoint {
     }
 
     //上线就广播
-    private void broadCastAllUsers(String message){
+    private void broadCastAllUsers(String message, int myUId){
         if (friendList == null)return;
-
         try{
             Set<Integer> onlineUserUId = onlineUser.keySet();
             for(Integer uid: onlineUserUId){
+                System.out.println(uid);
                 for (HdUser friend: friendList){
-
-                    if (uid == friend.getUniqueId()){
+                    //给好友发，并且给自己发在线用户
+                    if (uid == friend.getUniqueId() || uid == myUId){
                         ChatEndPoint chatEndPoint = onlineUser.get(uid);
                         chatEndPoint.session.getBasicRemote().sendText(message);
                         break;
