@@ -8,7 +8,6 @@ public class HdUser {
 
     private String password;
 
-
     private String createTime;
 
     private String unregisterTime;
