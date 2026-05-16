@@ -50,13 +50,20 @@ public class HdUserController {
         user.setUsername(username);
         user.setPassword(password);
         HdUser res = hdUserMapper.verify(user);
+
+
+        if(res != null){
+            HttpSession session = request.getSession(true);
+            session.setAttribute("uId", res.getUniqueId());
+            session.setAttribute("id", res.getId());
+            session.setAttribute("user", res);
+        }
+
+        //System.out.println("uId： " + session.getAttribute("uId"));
+        //System.out.println("id： " + session.getAttribute("id"));
+        //System.out.println("uId： " + session.getAttribute("user"));
+
         //返回查询的用户实体数据给前端
-
-        //test
-        HttpSession session = request.getSession();
-        session.setAttribute("id", res.getId());
-        session.setAttribute("user", res);
-
         return res;
     }
 
