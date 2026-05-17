@@ -70,6 +70,8 @@ public class ChatEndPoint {
 
         //将当前在线用户推送给自己的好友所有客户端
         broadCastAllUsers(onlineMessage, myUId);
+
+        System.out.println("用户连接：" + myUId);
     }
 
     private void selectFriend(int userId){
@@ -86,7 +88,7 @@ public class ChatEndPoint {
         try{
             Set<Integer> onlineUserUId = onlineUser.keySet();
             for(Integer uid: onlineUserUId){
-                System.out.println(uid);
+                //System.out.println(uid);
                 for (HdUser friend: friendList){
                     //给好友发，并且给自己发在线用户
                     if (uid == friend.getUniqueId() || uid == myUId){
