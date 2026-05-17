@@ -1,19 +1,19 @@
-package com.unknownharddrivesystem.utils;
+package com.unknownharddrivesystem.ws;
 
 import java.util.Set;
 
-public class MessageJSON {
-    private boolean systemInfo;
-
-    private String message;
+public class SendOnLineUserMessage {
+    private Boolean systemInfo;
 
     private Set<Integer> userUId;
 
+    public SendOnLineUserMessage() {
+    }
 
-    public MessageJSON(boolean systemInfo, String message, Set<Integer> userUId) {
+    public SendOnLineUserMessage(boolean systemInfo, Set<Integer> userUId) {
         this.systemInfo = systemInfo;
-        this.message = message;
         this.userUId = userUId;
+
     }
 
     public boolean isSystemInfo() {
@@ -22,14 +22,6 @@ public class MessageJSON {
 
     public void setSystemInfo(boolean systemInfo) {
         this.systemInfo = systemInfo;
-    }
-
-    public String getMessage() {
-        return message;
-    }
-
-    public void setMessage(String message) {
-        this.message = message;
     }
 
     public Set<Integer> getUserUId() {
