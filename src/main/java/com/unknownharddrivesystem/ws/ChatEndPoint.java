@@ -4,19 +4,13 @@ import com.unknownharddrivesystem.entity.FriendList;
 import com.unknownharddrivesystem.entity.HdUser;
 import com.unknownharddrivesystem.mapper.FriendMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
-import com.unknownharddrivesystem.utils.MessageJSON;
 import com.unknownharddrivesystem.utils.SpringBeanUtils;
 import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RestController;
 import tools.jackson.databind.ObjectMapper;
-import tools.jackson.databind.util.JSONPObject;
 
-import java.io.IOException;
-import java.net.http.WebSocket;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -64,9 +58,9 @@ public class ChatEndPoint {
         onlineUser.put(myUId, this);
 
         //创建Json字符串
-        MessageJSON messageJSON = new MessageJSON(true, "user now live", getUId());
+        SendOnLineUserMessage sendOnLineUserMessage = new SendOnLineUserMessage(true, getUId());
         ObjectMapper objectMapper = new ObjectMapper();
-        String onlineMessage = objectMapper.writeValueAsString(messageJSON);
+        String onlineMessage = objectMapper.writeValueAsString(sendOnLineUserMessage);
 
         //将当前在线用户推送给自己的好友所有客户端
         broadCastAllUsers(onlineMessage, myUId);
@@ -109,7 +103,35 @@ public class ChatEndPoint {
     //接收到用户发送的数据时调用
     @OnMessage
     public void onMessage(String message, Session session){
-        
+        try {
+            ObjectMapper jackson = new ObjectMapper();
+            System.out.println(message);
+            //前端传来的message是JSON格式，先转成对象
+            WebSocketMessage objectMessage = jackson.readValue(message, WebSocketMessage.class);
+
+            //获取 给谁发 和 谁发的信息
+            int toUser = objectMessage.getToUser();
+            int fromUser = objectMessage.getFromUser();
+
+            //转JSON格式
+            WebSocketMessage tempResultMessage = new WebSocketMessage(false, objectMessage.getMessage(), toUser, fromUser);
+            String sendMessage = jackson.writeValueAsString(tempResultMessage);
+
+            //防止用户不在线，系统提示
+            WebSocketMessage tempResultMessage2 = new WebSocketMessage(true, "用户不在线 :(", fromUser, -1);
+            String ifUserNotOnline = jackson.writeValueAsString(tempResultMessage2);
+            System.out.println("res: " + sendMessage);
+
+            //判断用户在不在，
+            ChatEndPoint isOnline = onlineUser.get(toUser);
+            if(isOnline != null){
+                onlineUser.get(toUser).session.getBasicRemote().sendText(sendMessage);
+            }else{
+                this.session.getBasicRemote().sendText(ifUserNotOnline);
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 
     //连接关闭时调用
