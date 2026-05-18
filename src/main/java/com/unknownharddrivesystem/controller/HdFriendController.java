@@ -6,6 +6,7 @@ import com.unknownharddrivesystem.entity.FriendList;
 import com.unknownharddrivesystem.entity.HdUser;
 import com.unknownharddrivesystem.mapper.FriendMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
+import com.unknownharddrivesystem.ws.ChatEndPoint;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpSession;
 import net.sf.jsqlparser.util.validation.feature.MySqlVersion;
@@ -13,11 +14,13 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.Serial;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Set;
 
 @RestController //标识控制器
 @RequestMapping("/friend") //控制器的前缀地址
@@ -186,4 +189,36 @@ public class HdFriendController {
 
     }
 
+    @GetMapping("/getOnlineFriend")
+    public List<Integer> getOnlineFriend(HttpServletRequest request){
+        //Request获取session 再获取session里存的id
+        HttpSession session = request.getSession(false);
+        int myUserId = (int)session.getAttribute("id");
+
+        ChatEndPoint ws = new ChatEndPoint();
+        Set<Integer> onlineUser = ws.getUId();
+
+        //我的id查好友id
+        List<FriendList> myFriends= friendMapper.selectFriend(myUserId);
+
+        //存好友uid
+        List<Integer> FriendLists = new ArrayList<>();
+        for(FriendList i: myFriends){
+            //好友id查好友信息
+            HdUser friend = userMapper.selectUserById(i.getFriendId());
+            //把好友uid加到FriendLists
+            FriendLists.add(friend.getUniqueId());
+        }
+
+        //用来筛选在线好友
+        List<Integer> onlineFriendLists = new ArrayList<>();
+        for(Integer onlineFriendUid:onlineUser){
+            //在线用户有好友就加到onlineFriendLists
+            if(FriendLists.contains(onlineFriendUid)){
+                onlineFriendLists.add(onlineFriendUid);
+            }
+        }
+
+        return onlineFriendLists;
+    }
 }
