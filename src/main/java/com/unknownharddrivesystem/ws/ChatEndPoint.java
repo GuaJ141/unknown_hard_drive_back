@@ -80,9 +80,8 @@ public class ChatEndPoint {
     private void broadCastAllUsers(String message, int myUId){
         if (friendList == null)return;
         try{
-            Set<Integer> onlineUserUId = onlineUser.keySet();
+            Set<Integer> onlineUserUId = getUId();
             for(Integer uid: onlineUserUId){
-                //System.out.println(uid);
                 for (HdUser friend: friendList){
                     //给好友发，并且给自己发在线用户
                     if (uid == friend.getUniqueId() || uid == myUId){
@@ -96,7 +95,7 @@ public class ChatEndPoint {
             e.printStackTrace();
         }
     }
-    private Set<Integer> getUId(){
+    public Set<Integer> getUId(){
         return onlineUser.keySet();
     }
 
