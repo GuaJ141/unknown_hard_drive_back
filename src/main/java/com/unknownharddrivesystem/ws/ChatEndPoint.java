@@ -11,6 +11,7 @@ import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -58,12 +59,17 @@ public class ChatEndPoint {
         onlineUser.put(myUId, this);
 
         //创建Json字符串
-        SendOnLineUserMessage sendOnLineUserMessage = new SendOnLineUserMessage(true, getUId());
-        ObjectMapper objectMapper = new ObjectMapper();
-        String onlineMessage = objectMapper.writeValueAsString(sendOnLineUserMessage);
-
-        //将当前在线用户推送给自己的好友所有客户端
+        ObjectMapper jackson = new ObjectMapper();
+        SendOnLineUserMessage temp1 = new SendOnLineUserMessage(true, 1, myUId);
+        String onlineMessage = jackson.writeValueAsString(temp1);
+        System.out.println(onlineMessage);
+        //告诉在线好友我在线了
         broadCastAllUsers(onlineMessage, myUId);
+
+        SendOnLineUserMessage temp2 = new SendOnLineUserMessage(true, 2, getUId());
+        String onlineFriends = jackson.writeValueAsString(temp2);
+        //给自己获取在线好友
+        this.session.getAsyncRemote().sendText(onlineFriends);
 
         System.out.println("用户连接：" + myUId);
     }
@@ -82,11 +88,14 @@ public class ChatEndPoint {
         try{
             Set<Integer> onlineUserUId = getUId();
             for(Integer uid: onlineUserUId){
+                //跳过我自己
+                if(uid == myUId)continue;
+
                 for (HdUser friend: friendList){
-                    //给好友发，并且给自己发在线用户
-                    if (uid == friend.getUniqueId() || uid == myUId){
+                    //给每个在线好友发
+                    if (uid == friend.getUniqueId()){
                         ChatEndPoint chatEndPoint = onlineUser.get(uid);
-                        chatEndPoint.session.getBasicRemote().sendText(message);
+                        chatEndPoint.session.getAsyncRemote().sendText(message);
                         break;
                     }
                 }
@@ -124,9 +133,9 @@ public class ChatEndPoint {
             //判断用户在不在，
             ChatEndPoint isOnline = onlineUser.get(toUser);
             if(isOnline != null){
-                onlineUser.get(toUser).session.getBasicRemote().sendText(sendMessage);
+                onlineUser.get(toUser).session.getAsyncRemote().sendText(sendMessage);
             }else{
-                this.session.getBasicRemote().sendText(ifUserNotOnline);
+                this.session.getAsyncRemote().sendText(ifUserNotOnline);
             }
         }catch (Exception e){
             e.printStackTrace();
@@ -136,6 +145,18 @@ public class ChatEndPoint {
     //连接关闭时调用
     @OnClose
     public void onClose(Session session){
+        //获取用户uid
+        Integer myUid = (Integer) httpSession.getAttribute("uId");
+        //从在线用户中移除
+        onlineUser.remove(myUid);
+        System.out.println("用户断开连接："+ myUid);
+        //格式化发送消息
+        SendOnLineUserMessage sendOnLineUserMessage = new SendOnLineUserMessage(true, 0, myUid);
+        ObjectMapper objectMapper = new ObjectMapper();
+        //将消息转为JSON格式
+        String onlineMessage = objectMapper.writeValueAsString(sendOnLineUserMessage);
+        //发送消息
+        broadCastAllUsers(onlineMessage, myUid);
 
     }
 
