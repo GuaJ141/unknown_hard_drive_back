@@ -147,9 +147,26 @@ public class HdUploadController {
     @RequestMapping(value = "/download")
     public ResponseEntity<byte[]> download(
             HttpServletRequest request,
-            @RequestParam("id") int id) throws Exception {
+            @RequestParam("postId") int postId,
+            @RequestParam("fileId") int fileId,
+            @RequestParam("token") String token) throws Exception {
+
+        HttpSession session = request.getSession(false);
+        //还没登录，直接返回
+        if(session == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
         //通过id找文件相关信息
-        HdFile file = hdFileMapper.selectFileByID(id);
+        HdFile file = hdFileMapper.selectFileByID(fileId);
+        HdPost post = hdPostMapper.selectById(postId);
+
+        //如果token对不上，直接返回
+        if(!post.getToken().equals(token))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        //从session里找用户信息 如果下载文件的用户名不相等直接返回
+        HdUser myInfo = (HdUser) session.getAttribute("user");
+        String myName = myInfo.getUsername();
+        if(!file.getUsername().equals(myName))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
         FileInputStream is = new FileInputStream(MainPath + "\\" + file.getPath() + file.getFilename() + file.getFileformat());
 
         byte[] bytes=new byte[is.available()];
@@ -159,7 +176,7 @@ public class HdUploadController {
         HttpHeaders httpHeaders = new HttpHeaders();
         httpHeaders.add("Content-Disposition","attachment;filename="+ file.getFilename() + file.getFileformat());
         //将要下载的文件的字节流返回给浏览器
-        ResponseEntity res = new ResponseEntity<byte[]>(bytes,httpHeaders, HttpStatus.OK);
+        ResponseEntity res = new ResponseEntity<byte[]>(bytes, httpHeaders, HttpStatus.OK);
         return res;
     }
 
