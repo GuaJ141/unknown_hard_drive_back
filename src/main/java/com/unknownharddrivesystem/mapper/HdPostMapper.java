@@ -26,4 +26,5 @@ public interface HdPostMapper {
     HdPost isExist(int id);
 
     int delPostByUsername(String username);
+
 }
