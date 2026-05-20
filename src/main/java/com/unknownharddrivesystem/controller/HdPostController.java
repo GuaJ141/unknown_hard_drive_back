@@ -13,6 +13,7 @@ import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
+import java.util.UUID;
 
 @RestController //标识控制器
 @RequestMapping("/post") //控制器的前缀地址
@@ -44,6 +45,7 @@ public class HdPostController {
         return post;
     }
 
+    //往redis里加入token
     @PostMapping("/insert")
     public int insert(
             @RequestParam("username") String username,
@@ -64,6 +66,9 @@ public class HdPostController {
             post.setDescribe(describe);
             post.setFileId(id);
             post.setUploadTime(timestamp);
+
+            String token = UUID.randomUUID().toString().replace("-", "");
+            post.setToken(token);
 
             int res = hdPostMapper.insertPost(post);
             return res;
