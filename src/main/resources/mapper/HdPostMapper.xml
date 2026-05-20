@@ -53,9 +53,9 @@
 
     <insert id="insertPost" parameterType="hdPost">
         INSERT INTO hd_post
-            (`title`, `describe`, `username`, `upload_time`, `file_id`)
+            (`title`, `describe`, `username`, `upload_time`, `file_id`, `token`)
         VALUES
-            (#{title}, #{describe}, #{username}, #{uploadTime}, #{fileId})
+            (#{title}, #{describe}, #{username}, #{uploadTime}, #{fileId}, #{token})
     </insert>
 
     <select id="isTheFilePosted" resultType="hdPost">
