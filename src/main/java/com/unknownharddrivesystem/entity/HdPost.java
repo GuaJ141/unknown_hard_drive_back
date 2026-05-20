@@ -10,18 +10,15 @@ public class HdPost {
     private Timestamp uploadTime;
     private int fileId;
     private String status;
+    private String token;
 
-    @Override
-    public String toString() {
-        return "hdPost{" +
-                "id=" + id +
-                ", title='" + title + '\'' +
-                ", describe='" + describe + '\'' +
-                ", username='" + username + '\'' +
-                ", uploadTime='" + uploadTime + '\'' +
-                ", fileId='" + fileId + '\'' +
-                ", status='" + status + '\'' +
-                '}';
+
+    public String getToken() {
+        return token;
+    }
+
+    public void setToken(String token) {
+        this.token = token;
     }
 
     public int getId() {
