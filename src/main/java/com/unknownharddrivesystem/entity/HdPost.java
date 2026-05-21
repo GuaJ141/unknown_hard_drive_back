@@ -9,7 +9,7 @@ public class HdPost {
     private String username;
     private Timestamp uploadTime;
     private int fileId;
-    private String status;
+    private int status;
     private String token;
 
 
@@ -69,11 +69,11 @@ public class HdPost {
         this.fileId = fileId;
     }
 
-    public String getStatus() {
+    public int getStatus() {
         return status;
     }
 
-    public void setStatus(String status) {
+    public void setStatus(int status) {
         this.status = status;
     }
 }
