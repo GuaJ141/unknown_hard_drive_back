@@ -20,6 +20,16 @@ public class HdUser {
 
     private int uniqueId;
 
+    private String fileAccessToken;
+
+    public String getFileAccessToken() {
+        return fileAccessToken;
+    }
+
+    public void setFileAccessToken(String fileAccessToken) {
+        this.fileAccessToken = fileAccessToken;
+    }
+
     public int getUniqueId() {
         return uniqueId;
     }
