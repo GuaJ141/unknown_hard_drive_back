@@ -18,6 +18,7 @@ import org.springframework.web.multipart.MultipartFile;
 import jakarta.servlet.http.HttpServletRequest;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -143,32 +144,54 @@ public class HdUploadController {
 //    @RequestParam("filename") String filename,
 //    @RequestParam("path") String path
 
-    //文件下载
-    @RequestMapping(value = "/download")
-    public ResponseEntity<byte[]> download(
+    //自己的文件下载
+    @RequestMapping(value = "/ownerDownload")
+    public ResponseEntity<byte[]> ownerDownload(
             HttpServletRequest request,
-            @RequestParam("postId") int postId,
             @RequestParam("fileId") int fileId,
-            @RequestParam("token") String token) throws Exception {
-
+            @RequestParam("token") String token) throws IOException {
         HttpSession session = request.getSession(false);
         //还没登录，直接返回
         if(session == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
+        HdFile file = hdFileMapper.selectFileByID(fileId);
+        HdUser user = (HdUser) session.getAttribute("user");
+
+        //登录用户对不上，返回
+        if(!file.getUsername().equals(user.getUsername()))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        //token对不上，直接返回
+        if(!user.getFileAccessToken().equals(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        return download(file);
+    }
+
+    //分享的文件下载
+//    @RequestMapping(value = "/shareDownload")
+//    public ResponseEntity<byte[]> shareDownload(){
+//
+//    }
+
+    //分享文件下载
+    @RequestMapping(value = "/postDownload")
+    public ResponseEntity<byte[]> postDownload(
+            @RequestParam("postId") int postId,
+            @RequestParam("fileId") int fileId,
+            @RequestParam("token") String token) throws Exception {
         //通过id找文件相关信息
         HdFile file = hdFileMapper.selectFileByID(fileId);
         HdPost post = hdPostMapper.selectById(postId);
 
+        //文件分享取消，链接关闭
+        if(post.getStatus() == 0)return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
         //如果token对不上，直接返回
         if(!post.getToken().equals(token))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
 
-        //从session里找用户信息 如果下载文件的用户名不相等直接返回
-        HdUser myInfo = (HdUser) session.getAttribute("user");
-        String myName = myInfo.getUsername();
-        if(!file.getUsername().equals(myName))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        return download(file);
+    }
+
+    private ResponseEntity<byte[]> download(HdFile file) throws IOException {
 
         FileInputStream is = new FileInputStream(MainPath + "\\" + file.getPath() + file.getFilename() + file.getFileformat());
-
         byte[] bytes=new byte[is.available()];
         //一次读取bytes.length个字节 并将读到的字节放入bytes数组中
         is.read(bytes);
