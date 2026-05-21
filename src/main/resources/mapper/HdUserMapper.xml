@@ -25,9 +25,9 @@
     </select>
     <insert id="register" parameterType="hdUser" >
         INSERT INTO hd_user
-            (`username`, `password`, `create_time`, `space`, `unique_id`)
+            (`username`, `password`, `create_time`, `space`, `unique_id`, `file_access_token`)
         VALUES
-            (#{username}, #{password}, #{createTime}, #{space}, #{uniqueId});
+            (#{username}, #{password}, #{createTime}, #{space}, #{uniqueId}, #{fileAccessToken});
     </insert>
     <update id="userUsedUpdate">
         UPDATE hd_user SET
