@@ -22,6 +22,7 @@ import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
 
 @RestController //标识控制器
 @RequestMapping("/hduser") //控制器的前缀地址
@@ -118,6 +119,9 @@ public class HdUserController {
         user.setCreateTime(Time);
         user.setSpace(1073741824);
         user.setUniqueId(uId);
+
+        String token = UUID.randomUUID().toString().replace("-", "");
+        user.setFileAccessToken(token);
 
         //判断UserFile文件是否存在
         File userFiles = new File(MainPath);
