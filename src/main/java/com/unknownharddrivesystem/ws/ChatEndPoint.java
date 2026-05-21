@@ -4,14 +4,13 @@ import com.unknownharddrivesystem.entity.FriendList;
 import com.unknownharddrivesystem.entity.HdUser;
 import com.unknownharddrivesystem.mapper.FriendMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
-import com.unknownharddrivesystem.utils.SpringBeanUtils;
+import com.unknownharddrivesystem.utils.SpringBeanUtil;
 import jakarta.servlet.http.HttpSession;
 import jakarta.websocket.*;
 import jakarta.websocket.server.ServerEndpoint;
 import org.springframework.stereotype.Component;
 import tools.jackson.databind.ObjectMapper;
 
-import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -25,8 +24,8 @@ public class ChatEndPoint {
     //存储每一个用户对应的ChatEndPoint 对象
     private static Map<Integer, ChatEndPoint> onlineUser = new ConcurrentHashMap<>();
 
-    private final FriendMapper friendMapper = SpringBeanUtils.getBean(FriendMapper.class);
-    private final HdUserMapper hdUserMapper = SpringBeanUtils.getBean(HdUserMapper.class);
+    private final FriendMapper friendMapper = SpringBeanUtil.getBean(FriendMapper.class);
+    private final HdUserMapper hdUserMapper = SpringBeanUtil.getBean(HdUserMapper.class);
 
     //sessiong对象，通过对象可以发送消息给指定用户
     private Session session;
