@@ -147,6 +147,21 @@ public class HdFriendController {
 
     }
 
+    //胎死腹中的孩子啊，请原谅我
+//    @PostMapping("/searchFriend")
+//    public List<HdUser> searchFriend(
+//            HttpServletRequest request,
+//            @RequestParam("input")String input){
+//        HttpSession session = request.getSession(false);
+//        HdUser me = (HdUser) session.getAttribute("user");
+//
+//        List<FriendList> friendIdLists = friendMapper.selectFriend(me.getId());
+//        List<HdUser> friendsInfo = friendMapper.selectFirendInfo(friendIdLists, input);
+//
+//        return friendsInfo;
+//    }
+
+
     @PostMapping("/selectFriend")
     public List<HdUser> selectFriend(HttpServletRequest request){
         HttpSession session = request.getSession(false);
