@@ -1,6 +1,5 @@
 package com.unknownharddrivesystem.controller;
 
-import com.sun.tools.javac.Main;
 import com.unknownharddrivesystem.entity.HdComment;
 import com.unknownharddrivesystem.entity.HdFile;
 import com.unknownharddrivesystem.entity.HdPost;
@@ -10,9 +9,6 @@ import com.unknownharddrivesystem.mapper.HdFileMapper;
 import com.unknownharddrivesystem.mapper.HdPostMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
 import jakarta.servlet.http.*;
-import jakarta.websocket.Session;
-import org.apache.catalina.session.StandardSession;
-import org.apache.tomcat.websocket.WsSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
@@ -169,10 +165,10 @@ public class HdUserController {
         HdUser user = (HdUser)session.getAttribute("user");
         boolean tag = true;
         File folder = new File(MainPath + "\\" + user.getUsername());
-        HdUploadController hdUploadController = new HdUploadController();
+        HdFileController hdFileController = new HdFileController();
 
         System.out.println(folder.getPath());
-        if (hdUploadController.fileDelete(folder)){
+        if (hdFileController.fileDelete(folder)){
             List<HdFile> file  = hdFileMapper.selectFileByPathLike(user.getUsername(), user.getUsername());
             if(!file.isEmpty()){
                 if (!(hdFileMapper.deleteFileByUsername(user.getUsername()) > 0)){
