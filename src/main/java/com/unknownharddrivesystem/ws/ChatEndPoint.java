@@ -63,7 +63,7 @@ public class ChatEndPoint {
         String onlineMessage = jackson.writeValueAsString(temp1);
         System.out.println(onlineMessage);
         //告诉在线好友我在线了
-        broadCastAllUsers(onlineMessage, myUId);
+        broadCastAllFriends(onlineMessage, myUId);
 
         SendOnLineUserMessage temp2 = new SendOnLineUserMessage(true, 2, getUId());
         String onlineFriends = jackson.writeValueAsString(temp2);
@@ -82,26 +82,33 @@ public class ChatEndPoint {
     }
 
     //上线就广播
-    private void broadCastAllUsers(String message, int myUId){
+    private void broadCastAllFriends(String message, int myUId){
         if (friendList == null)return;
-        try{
-            Set<Integer> onlineUserUId = getUId();
+        Set<Integer> onlineUserUId = getUId();
+        synchronized(this.session){
             for(Integer uid: onlineUserUId){
                 //跳过我自己
                 if(uid == myUId)continue;
-
                 for (HdUser friend: friendList){
                     //给每个在线好友发
                     if (uid == friend.getUniqueId()){
                         ChatEndPoint chatEndPoint = onlineUser.get(uid);
-                        chatEndPoint.session.getAsyncRemote().sendText(message);
+                        //chatEndPoint.session.getAsyncRemote().sendText(message);
+                        if(chatEndPoint != null && chatEndPoint.session != null && chatEndPoint.session.isOpen()){
+                            try {
+                                // 使用同步发送，设置超时时间
+                                chatEndPoint.session.getBasicRemote().sendText(message);
+                            } catch (Exception e) {
+                                // 捕获状态异常，记录日志但不影响其他用户
+                                System.err.println("Failed to send message to user " + uid + ": " + e.getMessage());
+                            }
+                        }
                         break;
                     }
                 }
             }
-        }catch (Exception e){
-            e.printStackTrace();
         }
+
     }
     public Set<Integer> getUId(){
         return onlineUser.keySet();
@@ -155,7 +162,7 @@ public class ChatEndPoint {
         //将消息转为JSON格式
         String onlineMessage = objectMapper.writeValueAsString(sendOnLineUserMessage);
         //发送消息
-        broadCastAllUsers(onlineMessage, myUid);
+        broadCastAllFriends(onlineMessage, myUid);
 
     }
 
