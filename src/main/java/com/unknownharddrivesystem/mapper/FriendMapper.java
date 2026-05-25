@@ -3,6 +3,7 @@ package com.unknownharddrivesystem.mapper;
 import com.unknownharddrivesystem.entity.FriendAddMessage;
 import com.unknownharddrivesystem.entity.FriendList;
 import com.unknownharddrivesystem.entity.HdUser;
+import org.apache.ibatis.annotations.Param;
 
 import java.util.List;
 
@@ -26,4 +27,6 @@ public interface FriendMapper {
     int deleFriendById(int friendId, int masterId);
 
     List<FriendList> selectFriend(int msterId);
+
+//    List<HdUser> selectFirendInfo(@Param("friendIds") List<FriendList> friendIds, String input);
 }
