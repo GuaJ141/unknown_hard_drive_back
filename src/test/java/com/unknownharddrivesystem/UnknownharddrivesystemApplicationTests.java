@@ -7,6 +7,7 @@ import com.unknownharddrivesystem.utils.RedisUtil;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.redis.core.RedisTemplate;
 import tools.jackson.databind.ObjectMapper;
 
 import java.util.UUID;
@@ -19,16 +20,15 @@ class UnknownharddrivesystemApplicationTests {
 	RedisUtil redisUtil;
 	@Autowired
 	HdUserMapper userMapper;
+	@Autowired
+	private RedisTemplate<String, Object> redisTemplate;
 
 	@Test
 	void contextLoads() {
 		String key = "69";
 		HdUser user = userMapper.selectUserById(69);
-		redisUtil.set(key, user, 30, TimeUnit.SECONDS);
 
-		ObjectMapper Jackson = new ObjectMapper();
-		//HdUser temp = Jackson.readValue(redisUtil.get(key).toString(), HdUser.class);
-		System.out.println(redisUtil.get(key).toString());
+		System.out.println(redisUtil.get(key));
 
 	}
 }
