@@ -2,6 +2,8 @@ package com.unknownharddrivesystem.mapper;
 
 import com.unknownharddrivesystem.entity.HdUser;
 
+import java.util.List;
+
 
 public interface HdUserMapper {
     HdUser verify(HdUser user);
@@ -19,4 +21,5 @@ public interface HdUserMapper {
     int userdelete(int id);
 
     Integer selectLatestUId();
+
 }
