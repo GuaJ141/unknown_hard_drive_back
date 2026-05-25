@@ -1,15 +1,19 @@
 package com.unknownharddrivesystem;
 
 import com.unknownharddrivesystem.UnknownharddrivesystemApplication;
+import com.unknownharddrivesystem.entity.FriendList;
 import com.unknownharddrivesystem.entity.HdUser;
+import com.unknownharddrivesystem.mapper.FriendMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
 import com.unknownharddrivesystem.utils.RedisUtil;
+import org.apache.ibatis.annotations.Param;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.redis.core.RedisTemplate;
 import tools.jackson.databind.ObjectMapper;
 
+import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
@@ -21,6 +25,8 @@ class UnknownharddrivesystemApplicationTests {
 	@Autowired
 	HdUserMapper userMapper;
 	@Autowired
+	FriendMapper friendMapper;
+	@Autowired
 	private RedisTemplate<String, Object> redisTemplate;
 
 	@Test
@@ -28,7 +34,10 @@ class UnknownharddrivesystemApplicationTests {
 		String key = "69";
 		HdUser user = userMapper.selectUserById(69);
 
-		System.out.println(redisUtil.get(key));
+//		List<FriendList> friendLists = friendMapper.selectFriend(69);
+//		List<HdUser> friendsInfo = friendMapper.selectFirendInfo( friendLists, "t");
+//
+//		System.out.println(friendsInfo.size());
 
 	}
 }
