@@ -7,6 +7,7 @@ import com.unknownharddrivesystem.mapper.HdFileMapper;
 import com.unknownharddrivesystem.mapper.HdPostMapper;
 import com.unknownharddrivesystem.mapper.HdUserMapper;
 import com.unknownharddrivesystem.utils.PagingResult;
+import com.unknownharddrivesystem.utils.RedisUtil;
 import jakarta.servlet.http.HttpSession;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -16,6 +17,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import jakarta.servlet.http.HttpServletRequest;
+import tools.jackson.databind.ObjectMapper;
+
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -25,10 +28,12 @@ import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 @RestController //标识控制器
 @RequestMapping("/file") //控制器的前缀地址
-public class HdUploadController {
+public class HdFileController {
     private final String MainPath = System.getProperty("user.dir") + "\\" + "UserFiles";
 
     @Autowired
@@ -39,6 +44,8 @@ public class HdUploadController {
     HdPostMapper hdPostMapper;
     @Autowired
     HdCommentMapper hdCommentMapper;
+    @Autowired
+    RedisUtil redisUtil;
 
     @PostMapping("/upload")
     //4-18多文件上传处理，未完成
@@ -166,10 +173,27 @@ public class HdUploadController {
     }
 
     //分享的文件下载
-//    @RequestMapping(value = "/shareDownload")
-//    public ResponseEntity<byte[]> shareDownload(){
-//
-//    }
+    @RequestMapping(value = "/shareDownload")
+    public ResponseEntity<byte[]> shareDownload(
+            @RequestParam("fileId") int fileId,
+            @RequestParam("token") String token) throws IOException {
+        String key = String.valueOf(fileId);
+        HdFile fileMainInfo = hdFileMapper.selectFileByID(fileId);
+
+        ObjectMapper jackson = new ObjectMapper();
+        ShareFile file = jackson.readValue(redisUtil.get(key).toString(), ShareFile.class);
+
+        //mysql不存在文件直接返回
+        if(fileMainInfo == null)return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        //redis不存在文件直接返回
+        if(file == null)return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+
+        //token不一致直接返回
+        if(!token.equals(file.getToken())) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+
+        return download(fileMainInfo);
+    }
 
     //分享文件下载
     @RequestMapping(value = "/postDownload")
@@ -593,7 +617,100 @@ public class HdUploadController {
     @PostMapping("/selectone")
     public HdFile selectone(@RequestParam("fileId") int id){
         //System.out.println("ID：" + id);
-        HdFile allfile = hdFileMapper.selectFileByID(id);
-        return allfile;
+        return hdFileMapper.selectFileByID(id);
+    }
+
+    @PostMapping("/share")
+    public int shareFile(
+            HttpServletRequest request,
+            @RequestParam("fileId") int fileId,
+            @RequestParam(required = false,name = "availTime", defaultValue = "-1") long availTime,
+            @RequestParam("timeUnit") int option){
+        HttpSession session = request.getSession(false);
+        if(session == null) return 0;
+
+        ShareFile shareFile = new ShareFile();
+
+        HdUser me = (HdUser) session.getAttribute("user");
+        HdFile fileInfo = hdFileMapper.selectFileByID(fileId);
+
+        //文件主键Id为键值
+        String key = String.valueOf(fileInfo.getId());
+        if(redisUtil.get(key) != null){
+            //已有数据
+            return 2;
+        }
+
+        TimeUnit timeUnit = switch (option) {
+            //1：秒  2：分  3：时  4：天  5：永久
+            case 1 -> TimeUnit.SECONDS;
+            case 2 -> TimeUnit.MINUTES;
+            case 3 -> TimeUnit.HOURS;
+            case 4 -> TimeUnit.DAYS;
+            default -> null;
+        };
+
+        shareFile.setFileId(fileId);
+        shareFile.setOption(timeUnit);
+        shareFile.setAvailTime(availTime);
+        shareFile.setToken(UUID.randomUUID().toString().replace("-", ""));
+
+        //文件不是你存的
+        if(!me.getUsername().equals(fileInfo.getUsername())) return 0;
+
+        if(option == 5){
+            redisUtil.set(key, shareFile);
+        }else{
+            redisUtil.set(key, shareFile ,availTime ,timeUnit);
+        }
+
+        Object isExist = redisUtil.get(key);
+        if(isExist != null){
+            return 1;
+        }else{
+            return 0;
+        }
+    }
+
+    @GetMapping("/selectShareFile")
+    public ShareFile selectShareFile(
+            HttpServletRequest request,
+            @RequestParam("fileId") int fileId){
+        HttpSession session = request.getSession(false);
+        HdUser me = (HdUser) session.getAttribute("user");
+        HdFile fileMainInfo = hdFileMapper.selectFileByID(fileId);
+
+        if (!me.getUsername().equals(fileMainInfo.getUsername())) return null;
+
+        String key = String.valueOf(fileId);
+        ObjectMapper jackson = new ObjectMapper();
+
+        Object fileInfo = redisUtil.get(key);
+        if(fileInfo != null){
+            return jackson.readValue(redisUtil.get(key).toString(), ShareFile.class);
+        }else{
+            return null;
+        }
+
+    }
+
+    @GetMapping("/shareFileCannel")
+    public int shareFileCannel(
+            HttpServletRequest request,
+            @RequestParam("fileId") int fileId){
+        HttpSession session = request.getSession(false);
+        HdUser me = (HdUser) session.getAttribute("user");
+        HdFile fileMainInfo = hdFileMapper.selectFileByID(fileId);
+
+        if (!me.getUsername().equals(fileMainInfo.getUsername())) return 0;
+        String key = String.valueOf(fileId);
+
+        redisUtil.delete(key);
+        Object isExist = redisUtil.get(key);
+        if(isExist == null){
+            return 1;
+        }else{
+            return 0;
+        }
     }
 }
