@@ -61,11 +61,10 @@ public class HdFileController {
 
         List<FileUploadResult> resList = new ArrayList<>();
         for(MultipartFile file : files){
+            System.out.println(file.getOriginalFilename());
             //往List加入的数据
             FileUploadResult res = new FileUploadResult();
-
-            //总的文件计数
-            //totalFile++;
+            res.setFileName(file.getOriginalFilename());
 
             //更新user已使用空间
             HdUser user = hdUserMapper.selectUserById(userid);
@@ -79,7 +78,6 @@ public class HdFileController {
                 //处理存入数据库的数据
                 StringBuilder filename = new StringBuilder(file.getOriginalFilename());
                 StringBuilder fileformat = new StringBuilder();
-                res.setFileName(filename.toString());
 
                 for (int i = filename.length() - 1; i >= 0 ; i--) {
                     char ch = filename.charAt(i);
