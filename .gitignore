@@ -68,3 +68,4 @@ logs/
 .env
 *.env
 
+/start.bat
