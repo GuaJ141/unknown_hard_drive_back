@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
@@ -48,7 +49,6 @@ public class HdFileController {
     RedisUtil redisUtil;
 
     @PostMapping("/upload")
-    //4-18多文件上传处理，未完成
     public List<FileUploadResult> upload(
             @RequestParam("files") MultipartFile[] files,
             @RequestParam("username") String username,
@@ -58,9 +58,8 @@ public class HdFileController {
         int flagUploadConfirm = 0;
         int flagFailed = 0;
         int totalFile = 0;
+
         List<FileUploadResult> resList = new ArrayList<>();
-
-
         for(MultipartFile file : files){
             //往List加入的数据
             FileUploadResult res = new FileUploadResult();
@@ -72,10 +71,11 @@ public class HdFileController {
             HdUser user = hdUserMapper.selectUserById(userid);
             long userused = user.getUsed();
             userused += file.getSize();
-            hdUserMapper.userUsedUpdate(userused, userid);
 
             //判断空间是否溢出
             if (userused < user.getSpace()) {
+                //没溢出更新数据库数据
+                hdUserMapper.userUsedUpdate(userused, userid);
                 //处理存入数据库的数据
                 StringBuilder filename = new StringBuilder(file.getOriginalFilename());
                 StringBuilder fileformat = new StringBuilder();
@@ -89,8 +89,8 @@ public class HdFileController {
                         break;
                     }
                 }
-
                 fileformat.reverse();
+
                 String filepath = path.replace(",", "\\") + "\\";
                 String type = "File";
 
@@ -101,7 +101,6 @@ public class HdFileController {
                 System.out.println("select:" + (select == null));
                 if (select == null) {
                     try {
-
                         HdFile hdFile = new HdFile();
                         hdFile.setFilename(filename.toString());
                         hdFile.setPath(filepath);
@@ -118,7 +117,7 @@ public class HdFileController {
                         hdFile.setUploadTime(timestamp);
 
                         if (hdFileMapper.fileUpload(hdFile) == 1) {
-                            //保存文件到服务器
+                            //保存文件到本地
                             file.transferTo(new File(MainPath + "\\" + path.replace(",", "\\") + "\\" + file.getOriginalFilename()));
                             System.out.println("上传成功:" + MainPath + "\\" + path.replace(",", "\\") + "\\" + file.getOriginalFilename());
                             res.setStatus(1);
@@ -159,15 +158,15 @@ public class HdFileController {
             @RequestParam("token") String token) throws IOException {
         HttpSession session = request.getSession(false);
         //还没登录，直接返回
-        if(session == null) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(session == null) return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         HdFile file = hdFileMapper.selectFileByID(fileId);
         HdUser user = (HdUser) session.getAttribute("user");
 
         //登录用户对不上，返回
-        if(!file.getUsername().equals(user.getUsername()))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(!file.getUsername().equals(user.getUsername()))return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
         //token对不上，直接返回
-        if(!user.getFileAccessToken().equals(token)) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(!user.getFileAccessToken().equals(token)) return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         return download(file);
     }
@@ -184,13 +183,13 @@ public class HdFileController {
         ShareFile file = jackson.readValue(redisUtil.get(key).toString(), ShareFile.class);
 
         //mysql不存在文件直接返回
-        if(fileMainInfo == null)return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        if(fileMainInfo == null)return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         //redis不存在文件直接返回
-        if(file == null)return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        if(file == null)return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         //token不一致直接返回
-        if(!token.equals(file.getToken())) return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(!token.equals(file.getToken())) return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         return download(fileMainInfo);
     }
@@ -206,9 +205,9 @@ public class HdFileController {
         HdPost post = hdPostMapper.selectById(postId);
 
         //文件分享取消，链接关闭
-        if(post.getStatus() == 0)return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(post.getStatus() == 0)return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
         //如果token对不上，直接返回
-        if(!post.getToken().equals(token))return ResponseEntity.status(HttpStatus.UNAUTHORIZED).build();
+        if(!post.getToken().equals(token))return ResponseEntity.status(HttpStatus.NOT_ACCEPTABLE).build();
 
         return download(file);
     }
@@ -291,6 +290,7 @@ public class HdFileController {
     }
 
     //文件重命名
+    @Transactional
     @PostMapping("/fileRename")
     public int rename(
             @RequestParam("filename") String newfilename,
@@ -316,10 +316,9 @@ public class HdFileController {
         }
         //System.out.println(MainPath + "\\" + oldfile.getPath() + oldfile.getFilename());
 
-        String selectpath = (oldfile.getPath() + oldfile.getFilename()).replace("\\", "\\\\");
+        String selectpath = (oldfile.getPath() + oldfile.getFilename()).replace("\\", "\\\\") + "\\\\";
 
         if (exits == null) {
-
             File file;
             File newFile;
             if (Objects.equals(type, "File")){
@@ -337,11 +336,14 @@ public class HdFileController {
                         if (Objects.equals(type, "Folder")){
                             List<FolderPath> list = new ArrayList<>();
 
-                            List<HdFile> allfilepath = hdFileMapper.selectFileByPathLike(username, selectpath );
+                            List<HdFile> allfilepath = hdFileMapper.selectFileByPathLike(username, selectpath);
                             for (HdFile i: allfilepath){
 
                                 String res = i.getPath().substring((oldfile.getPath() + oldfile.getFilename()) .length());
                                 String finalpath = oldfile.getPath() + newfilename + res;
+
+//                                System.out.println("res: "  + res);
+//                                System.out.println("finalpath: "  + finalpath);
 
                                 FolderPath folder = new FolderPath();
                                 folder.setId(i.getId());
@@ -353,7 +355,9 @@ public class HdFileController {
                             for(FolderPath i: list){
                                 //System.out.print("id: " + i.getId());
                                 //System.out.println("path: " + i.getPath());
-                                hdFileMapper.folderPathUpdate(i.getId(), i.getPath());
+                                if(hdFileMapper.folderPathUpdate(i.getId(), i.getPath()) != 1){
+                                    throw new RuntimeException("数据更新失败，数据回滚");
+                                }
                             }
                         }
                         //System.out.println("重命名成功");
